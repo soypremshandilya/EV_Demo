@@ -1,0 +1,61 @@
+import { LayoutDashboard, Bike, Battery, Users, Receipt, TrendingUp, Activity } from 'lucide-react'
+
+export default function Dashboard() {
+  const stats = [
+    { icon: Bike, label: 'Total Scooters', value: '—', color: 'var(--accent)' },
+    { icon: Battery, label: 'Active Batteries', value: '—', color: 'var(--info)' },
+    { icon: Users, label: 'Customers', value: '—', color: 'var(--success)' },
+    { icon: Receipt, label: 'Active Rentals', value: '—', color: 'var(--warning)' },
+  ]
+
+  return (
+    <div className="animate-fade-in">
+      <div className="page-header">
+        <h1 className="page-title">Dashboard</h1>
+        <p className="page-subtitle">Real-time overview of your EV scooter fleet operations</p>
+      </div>
+
+      {/* Stats Grid */}
+      <div className="card-grid" style={{ marginBottom: 'var(--space-8)' }}>
+        {stats.map((stat, i) => (
+          <div
+            key={stat.label}
+            className={`card stat-card animate-fade-in animate-fade-in-delay-${i + 1}`}
+          >
+            <div className="stat-icon" style={{ background: `${stat.color}18`, color: stat.color }}>
+              <stat.icon size={22} />
+            </div>
+            <div className="stat-value">{stat.value}</div>
+            <div className="stat-label">{stat.label}</div>
+          </div>
+        ))}
+      </div>
+
+      {/* Placeholder Panels */}
+      <div className="card-grid">
+        <div className="card animate-fade-in animate-fade-in-delay-3" style={{ gridColumn: 'span 2' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)', marginBottom: 'var(--space-4)' }}>
+            <TrendingUp size={20} style={{ color: 'var(--accent)' }} />
+            <h3 style={{ fontSize: 'var(--font-md)', fontWeight: 600 }}>Revenue Trend</h3>
+          </div>
+          <div className="table-placeholder" style={{ border: 'none', padding: 'var(--space-8)' }}>
+            <p style={{ color: 'var(--text-muted)', fontSize: 'var(--font-sm)' }}>
+              Chart will render once the database is connected
+            </p>
+          </div>
+        </div>
+        <div className="card animate-fade-in animate-fade-in-delay-4">
+          <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)', marginBottom: 'var(--space-4)' }}>
+            <Activity size={20} style={{ color: 'var(--success)' }} />
+            <h3 style={{ fontSize: 'var(--font-md)', fontWeight: 600 }}>Fleet Health</h3>
+          </div>
+          <div className="table-placeholder" style={{ border: 'none', padding: 'var(--space-8)' }}>
+            <p style={{ color: 'var(--text-muted)', fontSize: 'var(--font-sm)' }}>
+              Status breakdown coming soon
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}

@@ -1,0 +1,17 @@
+# Dependencies
+frontend/node_modules/
+
+# Build
+frontend/dist/
+
+# Database
+backend/voltride.db
+
+# Python
+__pycache__/
+*.pyc
+.env
+
+# IDE
+.vscode/
+.idea/
