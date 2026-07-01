@@ -1,14 +1,65 @@
-import { useState } from 'react'
-import { Send, Sparkles } from 'lucide-react'
+import { useState, useRef, useEffect } from 'react'
+import { Send, Sparkles, Bot, User } from 'lucide-react'
 import './AIChat.css'
+
+const API = 'http://localhost:8000'
 
 export default function AIChat() {
   const [message, setMessage] = useState('')
+  const [messages, setMessages] = useState([])
+  const [isLoading, setIsLoading] = useState(false)
+  const messagesEndRef = useRef(null)
+  const inputRef = useRef(null)
 
-  const handleSend = () => {
-    if (!message.trim()) return
-    // Will connect to backend later
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }
+
+  useEffect(() => {
+    scrollToBottom()
+  }, [messages, isLoading])
+
+  const sendToGemini = async (text, currentMessages) => {
+    // Build history from existing messages (exclude the one we just added)
+    const history = currentMessages
+      .filter(m => m.role === 'user' || m.role === 'assistant')
+      .map(m => ({ role: m.role, content: m.content }))
+
+    try {
+      const res = await fetch(`${API}/chat`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: text, history }),
+      })
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}))
+        throw new Error(err.detail || `Server error (${res.status})`)
+      }
+
+      const data = await res.json()
+      return data.reply
+    } catch (err) {
+      return `⚠️ ${err.message}`
+    }
+  }
+
+  const handleSend = async () => {
+    const text = message.trim()
+    if (!text || isLoading) return
+
+    const userMsg = { id: Date.now(), role: 'user', content: text }
+    const updatedMessages = [...messages, userMsg]
+    setMessages(updatedMessages)
     setMessage('')
+    setIsLoading(true)
+
+    const reply = await sendToGemini(text, messages)
+
+    const assistantMsg = { id: Date.now() + 1, role: 'assistant', content: reply }
+    setMessages(prev => [...prev, assistantMsg])
+    setIsLoading(false)
+    inputRef.current?.focus()
   }
 
   const handleKeyDown = (e) => {
@@ -17,6 +68,25 @@ export default function AIChat() {
       handleSend()
     }
   }
+
+  const handleSuggestion = async (text) => {
+    if (isLoading) return
+
+    const userMsg = { id: Date.now(), role: 'user', content: text }
+    const updatedMessages = [...messages, userMsg]
+    setMessages(updatedMessages)
+    setMessage('')
+    setIsLoading(true)
+
+    const reply = await sendToGemini(text, messages)
+
+    const assistantMsg = { id: Date.now() + 1, role: 'assistant', content: reply }
+    setMessages(prev => [...prev, assistantMsg])
+    setIsLoading(false)
+    inputRef.current?.focus()
+  }
+
+  const isEmpty = messages.length === 0
 
   return (
     <div className="chat-page animate-fade-in">
@@ -28,37 +98,72 @@ export default function AIChat() {
       <div className="chat-container">
         {/* Messages Area */}
         <div className="chat-messages" id="chat-messages">
-          <div className="chat-empty">
-            <div className="chat-empty-icon">
-              <Sparkles size={32} />
-            </div>
-            <h2>How can I help?</h2>
-            <p>
-              I can look up scooter statuses, battery health, customer info,
-              rental history, and more. I'm read-only — I never modify your data.
-            </p>
+          {isEmpty && !isLoading && (
+            <div className="chat-empty">
+              <div className="chat-empty-icon">
+                <Sparkles size={32} />
+              </div>
+              <h2>How can I help?</h2>
+              <p>
+                I can look up scooter statuses, battery health, customer info,
+                rental history, and more. I'm read-only — I never modify your data.
+              </p>
 
-            <div className="chat-suggestions">
-              <button className="chat-suggestion" onClick={() => setMessage('How many scooters are active right now?')}>
-                Active scooters
-              </button>
-              <button className="chat-suggestion" onClick={() => setMessage('Which batteries need replacement?')}>
-                Battery health
-              </button>
-              <button className="chat-suggestion" onClick={() => setMessage('Show today\'s rentals')}>
-                Today's rentals
-              </button>
-              <button className="chat-suggestion" onClick={() => setMessage('Top customers by revenue')}>
-                Top customers
-              </button>
+              <div className="chat-suggestions">
+                <button className="chat-suggestion" onClick={() => handleSuggestion('How many scooters are active right now?')}>
+                  Active scooters
+                </button>
+                <button className="chat-suggestion" onClick={() => handleSuggestion('Which batteries need replacement?')}>
+                  Battery health
+                </button>
+                <button className="chat-suggestion" onClick={() => handleSuggestion("Show today's rentals")}>
+                  Today's rentals
+                </button>
+                <button className="chat-suggestion" onClick={() => handleSuggestion('Top customers by revenue')}>
+                  Top customers
+                </button>
+              </div>
             </div>
-          </div>
+          )}
+
+          {messages.map((msg) => (
+            <div key={msg.id} className={`chat-bubble-row ${msg.role}`}>
+              <div className="chat-bubble-avatar">
+                {msg.role === 'user' ? <User size={16} /> : <Bot size={16} />}
+              </div>
+              <div className={`chat-bubble ${msg.role}`}>
+                <div className="chat-bubble-label">
+                  {msg.role === 'user' ? 'You' : 'VoltRide AI'}
+                </div>
+                <div className="chat-bubble-content">{msg.content}</div>
+              </div>
+            </div>
+          ))}
+
+          {isLoading && (
+            <div className="chat-bubble-row assistant">
+              <div className="chat-bubble-avatar">
+                <Bot size={16} />
+              </div>
+              <div className="chat-bubble assistant">
+                <div className="chat-bubble-label">VoltRide AI</div>
+                <div className="chat-typing-indicator">
+                  <span></span>
+                  <span></span>
+                  <span></span>
+                </div>
+              </div>
+            </div>
+          )}
+
+          <div ref={messagesEndRef} />
         </div>
 
         {/* Input Area */}
         <div className="chat-input-area">
           <div className="chat-input-wrapper">
             <input
+              ref={inputRef}
               type="text"
               className="chat-input"
               id="chat-input"
@@ -67,12 +172,14 @@ export default function AIChat() {
               onChange={(e) => setMessage(e.target.value)}
               onKeyDown={handleKeyDown}
               autoComplete="off"
+              disabled={isLoading}
             />
             <button
-              className="chat-send-btn"
+              className={`chat-send-btn${isLoading ? ' disabled' : ''}`}
               id="chat-send-btn"
               onClick={handleSend}
               aria-label="Send message"
+              disabled={isLoading}
             >
               <Send size={18} />
             </button>

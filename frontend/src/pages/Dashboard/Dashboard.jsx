@@ -1,11 +1,34 @@
-import { LayoutDashboard, Bike, Battery, Users, Receipt, TrendingUp, Activity } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { Bike, Battery, Users, Receipt, TrendingUp, Activity } from 'lucide-react'
+
+const API = 'http://localhost:8000'
 
 export default function Dashboard() {
+  const [counts, setCounts] = useState({ scooters: '—', batteries: '—', customers: '—', rentals: '—' })
+
+  useEffect(() => {
+    Promise.all([
+      fetch(`${API}/scooters`).then(r => r.json()),
+      fetch(`${API}/batteries`).then(r => r.json()),
+      fetch(`${API}/customers`).then(r => r.json()),
+      fetch(`${API}/rentals`).then(r => r.json()),
+    ])
+      .then(([s, b, c, r]) => {
+        setCounts({
+          scooters: s.length,
+          batteries: b.length,
+          customers: c.length,
+          rentals: r.length,
+        })
+      })
+      .catch(() => {})
+  }, [])
+
   const stats = [
-    { icon: Bike, label: 'Total Scooters', value: '—', color: 'var(--accent)' },
-    { icon: Battery, label: 'Active Batteries', value: '—', color: 'var(--info)' },
-    { icon: Users, label: 'Customers', value: '—', color: 'var(--success)' },
-    { icon: Receipt, label: 'Active Rentals', value: '—', color: 'var(--warning)' },
+    { icon: Bike, label: 'Total Scooters', value: counts.scooters, color: 'var(--accent)' },
+    { icon: Battery, label: 'Active Batteries', value: counts.batteries, color: 'var(--info)' },
+    { icon: Users, label: 'Customers', value: counts.customers, color: 'var(--success)' },
+    { icon: Receipt, label: 'Active Rentals', value: counts.rentals, color: 'var(--warning)' },
   ]
 
   return (

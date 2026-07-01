@@ -1,6 +1,26 @@
+import { useState, useEffect } from 'react'
 import { Bike } from 'lucide-react'
 
+const API = 'http://localhost:8000'
+
+function getBatteryColor(pct) {
+  if (pct >= 60) return 'var(--success)'
+  if (pct >= 30) return 'var(--warning)'
+  return 'var(--danger)'
+}
+
 export default function Scooters() {
+  const [scooters, setScooters] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
+
+  useEffect(() => {
+    fetch(`${API}/scooters`)
+      .then(res => res.json())
+      .then(data => { setScooters(data); setLoading(false) })
+      .catch(err => { setError(err.message); setLoading(false) })
+  }, [])
+
   return (
     <div className="animate-fade-in">
       <div className="page-header">
@@ -8,13 +28,63 @@ export default function Scooters() {
         <p className="page-subtitle">Fleet inventory and scooter status tracking</p>
       </div>
 
-      <div className="table-placeholder animate-fade-in animate-fade-in-delay-1">
-        <div className="table-placeholder-icon">
-          <Bike size={28} />
+      {loading && (
+        <div className="loading-state">
+          <div className="loading-spinner"></div>
+          <span>Loading scooters…</span>
         </div>
-        <h3>No Scooter Data Yet</h3>
-        <p>Scooter inventory will appear here once the database is connected and populated.</p>
-      </div>
+      )}
+
+      {error && (
+        <div className="error-state">
+          <Bike size={28} />
+          <p>Failed to load scooters: {error}</p>
+        </div>
+      )}
+
+      {!loading && !error && (
+        <div className="data-table-wrapper animate-fade-in animate-fade-in-delay-1">
+          <table className="data-table" id="scooters-table">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Location</th>
+                <th>Battery</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {scooters.map(s => (
+                <tr key={s.id}>
+                  <td>{s.id}</td>
+                  <td>{s.name}</td>
+                  <td>{s.location}</td>
+                  <td>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <div className="battery-bar">
+                        <div
+                          className="battery-bar-fill"
+                          style={{
+                            width: `${s.battery_percentage}%`,
+                            background: getBatteryColor(s.battery_percentage),
+                          }}
+                        />
+                      </div>
+                      <span style={{ fontSize: 'var(--font-xs)', color: 'var(--text-muted)' }}>
+                        {s.battery_percentage}%
+                      </span>
+                    </div>
+                  </td>
+                  <td>
+                    <span className={`status-badge ${s.status}`}>{s.status}</span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
     </div>
   )
 }
