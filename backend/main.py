@@ -14,6 +14,7 @@ from routes.customers import router as customers_router
 from routes.rentals import router as rentals_router
 from services.simulator import run_simulator
 from routes.chat import router as chat_router
+from routes.dashboard import router as dashboard_router
 
 
 @asynccontextmanager
@@ -49,6 +50,7 @@ app.include_router(batteries_router)
 app.include_router(customers_router)
 app.include_router(rentals_router)
 app.include_router(chat_router)
+app.include_router(dashboard_router)
 
 
 @app.get("/health")

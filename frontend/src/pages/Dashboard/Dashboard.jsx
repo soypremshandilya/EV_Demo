@@ -1,34 +1,55 @@
 import { useState, useEffect } from 'react'
-import { Bike, Battery, Users, Receipt, TrendingUp, Activity } from 'lucide-react'
+import { Bike, Battery, Users, IndianRupee, Zap, Activity, TrendingUp } from 'lucide-react'
 
 const API = 'http://localhost:8000'
 
 export default function Dashboard() {
-  const [counts, setCounts] = useState({ scooters: '—', batteries: '—', customers: '—', rentals: '—' })
+  const [stats, setStats] = useState(null)
 
   useEffect(() => {
-    Promise.all([
-      fetch(`${API}/scooters`).then(r => r.json()),
-      fetch(`${API}/batteries`).then(r => r.json()),
-      fetch(`${API}/customers`).then(r => r.json()),
-      fetch(`${API}/rentals`).then(r => r.json()),
-    ])
-      .then(([s, b, c, r]) => {
-        setCounts({
-          scooters: s.length,
-          batteries: b.length,
-          customers: c.length,
-          rentals: r.length,
-        })
-      })
+    fetch(`${API}/dashboard/stats`)
+      .then(r => r.json())
+      .then(data => setStats(data))
       .catch(() => {})
   }, [])
 
-  const stats = [
-    { icon: Bike, label: 'Total Scooters', value: counts.scooters, color: 'var(--accent)' },
-    { icon: Battery, label: 'Active Batteries', value: counts.batteries, color: 'var(--info)' },
-    { icon: Users, label: 'Customers', value: counts.customers, color: 'var(--success)' },
-    { icon: Receipt, label: 'Active Rentals', value: counts.rentals, color: 'var(--warning)' },
+  const cards = [
+    {
+      icon: Bike,
+      label: 'Total Scooters',
+      value: stats?.total_scooters ?? '—',
+      color: 'var(--accent)',
+    },
+    {
+      icon: Zap,
+      label: 'Available',
+      value: stats?.available_scooters ?? '—',
+      color: 'var(--success)',
+    },
+    {
+      icon: Battery,
+      label: 'Charging',
+      value: stats?.charging_scooters ?? '—',
+      color: 'var(--warning)',
+    },
+    {
+      icon: Users,
+      label: 'Customers',
+      value: stats?.total_customers ?? '—',
+      color: 'var(--info)',
+    },
+    {
+      icon: IndianRupee,
+      label: 'Total Revenue',
+      value: stats ? `₹${stats.total_revenue.toLocaleString('en-IN')}` : '—',
+      color: '#a78bfa',
+    },
+    {
+      icon: Activity,
+      label: 'Avg Battery',
+      value: stats ? `${stats.avg_battery}%` : '—',
+      color: stats && stats.avg_battery >= 50 ? 'var(--success)' : 'var(--warning)',
+    },
   ]
 
   return (
@@ -40,16 +61,16 @@ export default function Dashboard() {
 
       {/* Stats Grid */}
       <div className="card-grid" style={{ marginBottom: 'var(--space-8)' }}>
-        {stats.map((stat, i) => (
+        {cards.map((card, i) => (
           <div
-            key={stat.label}
-            className={`card stat-card animate-fade-in animate-fade-in-delay-${i + 1}`}
+            key={card.label}
+            className={`card stat-card animate-fade-in animate-fade-in-delay-${Math.min(i + 1, 4)}`}
           >
-            <div className="stat-icon" style={{ background: `${stat.color}18`, color: stat.color }}>
-              <stat.icon size={22} />
+            <div className="stat-icon" style={{ background: `${card.color}18`, color: card.color }}>
+              <card.icon size={22} />
             </div>
-            <div className="stat-value">{stat.value}</div>
-            <div className="stat-label">{stat.label}</div>
+            <div className="stat-value">{card.value}</div>
+            <div className="stat-label">{card.label}</div>
           </div>
         ))}
       </div>
@@ -63,7 +84,7 @@ export default function Dashboard() {
           </div>
           <div className="table-placeholder" style={{ border: 'none', padding: 'var(--space-8)' }}>
             <p style={{ color: 'var(--text-muted)', fontSize: 'var(--font-sm)' }}>
-              Chart will render once the database is connected
+              Chart visualisation coming soon
             </p>
           </div>
         </div>

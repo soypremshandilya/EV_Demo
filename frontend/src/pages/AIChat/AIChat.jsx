@@ -8,6 +8,7 @@ export default function AIChat() {
   const [message, setMessage] = useState('')
   const [messages, setMessages] = useState([])
   const [isLoading, setIsLoading] = useState(false)
+  const [sessionId, setSessionId] = useState(null)
   const messagesEndRef = useRef(null)
   const inputRef = useRef(null)
 
@@ -19,17 +20,12 @@ export default function AIChat() {
     scrollToBottom()
   }, [messages, isLoading])
 
-  const sendToGemini = async (text, currentMessages) => {
-    // Build history from existing messages (exclude the one we just added)
-    const history = currentMessages
-      .filter(m => m.role === 'user' || m.role === 'assistant')
-      .map(m => ({ role: m.role, content: m.content }))
-
+  const sendToGemini = async (text) => {
     try {
       const res = await fetch(`${API}/chat`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: text, history }),
+        body: JSON.stringify({ message: text, session_id: sessionId }),
       })
 
       if (!res.ok) {
@@ -38,6 +34,8 @@ export default function AIChat() {
       }
 
       const data = await res.json()
+      // Store session_id from backend for follow-up questions
+      if (data.session_id) setSessionId(data.session_id)
       return data.reply
     } catch (err) {
       return `⚠️ ${err.message}`
@@ -49,12 +47,11 @@ export default function AIChat() {
     if (!text || isLoading) return
 
     const userMsg = { id: Date.now(), role: 'user', content: text }
-    const updatedMessages = [...messages, userMsg]
-    setMessages(updatedMessages)
+    setMessages(prev => [...prev, userMsg])
     setMessage('')
     setIsLoading(true)
 
-    const reply = await sendToGemini(text, messages)
+    const reply = await sendToGemini(text)
 
     const assistantMsg = { id: Date.now() + 1, role: 'assistant', content: reply }
     setMessages(prev => [...prev, assistantMsg])
@@ -73,12 +70,11 @@ export default function AIChat() {
     if (isLoading) return
 
     const userMsg = { id: Date.now(), role: 'user', content: text }
-    const updatedMessages = [...messages, userMsg]
-    setMessages(updatedMessages)
+    setMessages(prev => [...prev, userMsg])
     setMessage('')
     setIsLoading(true)
 
-    const reply = await sendToGemini(text, messages)
+    const reply = await sendToGemini(text)
 
     const assistantMsg = { id: Date.now() + 1, role: 'assistant', content: reply }
     setMessages(prev => [...prev, assistantMsg])

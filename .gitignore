@@ -11,6 +11,7 @@ backend/voltride.db
 __pycache__/
 *.pyc
 .env
+backend/logs.txt
 
 # IDE
 .vscode/

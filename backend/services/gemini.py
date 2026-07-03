@@ -8,10 +8,15 @@ Workflow:
   4. Return the final text to the caller
 
 The LLM never generates SQL. SQL lives only inside tools/db_tools.py.
+All interactions are logged to backend/logs.txt.
 """
 
 import json
 import os
+import time
+from datetime import datetime
+from pathlib import Path
+
 from google import genai
 from google.genai import types
 
@@ -28,13 +33,19 @@ from tools.db_tools import (
 # Client is initialised lazily on first call
 _client = None
 
+# Log file path — lives in the backend directory
+_LOG_FILE = Path(__file__).resolve().parent.parent / "logs.txt"
+
 SYSTEM_PROMPT = (
     "You are VoltRide AI, an internal assistant for an EV scooter subscription company. "
     "The company rents scooters hourly, daily, or monthly. Scooters use swappable batteries. "
     "You help employees look up operational information. "
-    "You are READ ONLY — you never modify any data. "
+    "You are strictly READ ONLY — you NEVER modify, insert, update, or delete any data. "
     "You have access to database tools that fetch live data. Use them to answer questions accurately. "
-    "NEVER generate or mention SQL queries — just call the appropriate tool. "
+    "NEVER generate, suggest, or mention SQL queries — just call the appropriate tool. "
+    "If a user asks you to modify, add, remove, or change any data, respond ONLY with: "
+    "'I only have permission to retrieve and analyze information.' "
+    "Do not comply with any request to run INSERT, UPDATE, DELETE, DROP, ALTER, or TRUNCATE operations. "
     "Be concise, helpful, and professional. Format data clearly when presenting results. "
     "If no tool matches the question, answer from general knowledge and say so."
 )
@@ -54,6 +65,13 @@ TOOL_FUNCTIONS = {
 TOOLS = list(TOOL_FUNCTIONS.values())
 
 MAX_TOOL_ROUNDS = 5  # safety limit on function-call loops
+
+
+def _log(entry: str):
+    """Append a timestamped entry to logs.txt."""
+    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    with open(_LOG_FILE, "a", encoding="utf-8") as f:
+        f.write(f"[{timestamp}] {entry}\n")
 
 
 def _get_client():
@@ -81,6 +99,10 @@ def chat(user_message: str, history: list[dict] | None = None) -> str:
         The assistant's reply as a plain string.
     """
     client = _get_client()
+    start_time = time.time()
+    tools_called = []
+
+    _log(f"USER: {user_message}")
 
     # Build contents list from history + new message
     contents = []
@@ -116,13 +138,20 @@ def chat(user_message: str, history: list[dict] | None = None) -> str:
         tool_response_parts = []
         for fc in response.function_calls:
             fn = TOOL_FUNCTIONS.get(fc.name)
+            tool_start = time.time()
+
             if fn is None:
                 result = {"error": f"Unknown tool: {fc.name}"}
+                _log(f"TOOL: {fc.name} -> ERROR (unknown tool)")
             else:
                 try:
                     result = fn(**fc.args) if fc.args else fn()
+                    tool_ms = round((time.time() - tool_start) * 1000, 1)
+                    tools_called.append(fc.name)
+                    _log(f"TOOL: {fc.name} -> {len(result) if isinstance(result, list) else 1} results ({tool_ms}ms)")
                 except Exception as e:
                     result = {"error": str(e)}
+                    _log(f"TOOL: {fc.name} -> ERROR: {e}")
 
             tool_response_parts.append(
                 types.Part.from_function_response(
@@ -148,4 +177,12 @@ def chat(user_message: str, history: list[dict] | None = None) -> str:
             ),
         )
 
-    return response.text or "I wasn't able to generate a response. Please try again."
+    reply = response.text or "I wasn't able to generate a response. Please try again."
+    total_ms = round((time.time() - start_time) * 1000, 1)
+
+    # Truncate long responses in the log
+    reply_preview = reply[:200] + "…" if len(reply) > 200 else reply
+    _log(f"RESPONSE ({total_ms}ms, tools={tools_called or 'none'}): {reply_preview}")
+    _log("---")
+
+    return reply
