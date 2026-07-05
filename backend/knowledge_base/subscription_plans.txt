@@ -1,0 +1,37 @@
+VoltRide — Subscription Plans
+==============================
+
+HOURLY PLAN
+  - Rate: ₹49 per hour
+  - No commitment required
+  - Battery swap fee: ₹25 per swap
+  - Best for occasional riders and tourists
+
+DAILY PLAN
+  - Rate: ₹299 per day (24 hours)
+  - Unlimited battery swaps included
+  - Helmet included
+  - Insurance coverage: basic third-party
+
+MONTHLY PLAN
+  - Rate: ₹3,499 per month
+  - Unlimited battery swaps included
+  - Priority scooter reservation
+  - Full insurance coverage (third-party + own damage)
+  - Free roadside assistance
+  - Dedicated customer support line
+
+CORPORATE PLAN
+  - Custom pricing based on fleet size
+  - Minimum 10 scooters
+  - Dedicated account manager
+  - Monthly usage reports and analytics
+  - Volume discounts available
+
+GENERAL TERMS
+  - All plans require a refundable security deposit of ₹500.
+  - Valid government-issued ID and driving licence required.
+  - Minimum rider age: 18 years.
+  - Late return fee: ₹100 per hour beyond the booked duration.
+  - Cancellation within 1 hour of booking: full refund.
+  - Cancellation after 1 hour: 50% refund.

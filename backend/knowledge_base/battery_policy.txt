@@ -1,0 +1,24 @@
+VoltRide — Battery Replacement Policy
+======================================
+
+1. REPLACEMENT CRITERIA
+   - Any scooter battery that drops below 15% charge must be swapped immediately.
+   - Batteries showing signs of swelling, leaking, or physical damage must be retired regardless of charge level.
+   - Batteries that fail to hold above 50% charge after a full cycle are flagged for replacement.
+
+2. SWAP PROCEDURE
+   - Riders may swap batteries at any designated VoltRide battery station.
+   - Station staff will scan the old battery barcode and issue a fresh one.
+   - Average swap time target: under 2 minutes.
+
+3. BATTERY LIFESPAN
+   - Expected lifespan: 500 full charge cycles (~18 months of typical use).
+   - After 400 cycles, batteries enter "watch" status and are inspected monthly.
+
+4. COST
+   - Battery swaps are included in all subscription plans at no additional cost.
+   - Riders on hourly plans are charged ₹25 per swap.
+
+5. DISPOSAL
+   - Retired batteries are sent to our certified recycling partner, GreenCell Ltd.
+   - VoltRide maintains a zero-landfill policy for all lithium-ion cells.

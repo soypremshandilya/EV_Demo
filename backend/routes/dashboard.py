@@ -1,6 +1,6 @@
 """GET /dashboard/stats — aggregated metrics for the dashboard cards."""
 
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException
 from database.db import get_connection
 
 router = APIRouter(tags=["Dashboard"])
@@ -8,16 +8,28 @@ router = APIRouter(tags=["Dashboard"])
 
 @router.get("/dashboard/stats")
 def dashboard_stats():
-    conn = get_connection()
+    try:
+        conn = get_connection()
+    except Exception:
+        raise HTTPException(
+            status_code=503,
+            detail="Database is temporarily unavailable.",
+        )
 
-    total_scooters = conn.execute("SELECT COUNT(*) FROM scooters").fetchone()[0]
-    available = conn.execute("SELECT COUNT(*) FROM scooters WHERE status = 'available'").fetchone()[0]
-    charging = conn.execute("SELECT COUNT(*) FROM scooters WHERE status = 'charging'").fetchone()[0]
-    total_customers = conn.execute("SELECT COUNT(*) FROM customers").fetchone()[0]
-    total_revenue = conn.execute("SELECT COALESCE(SUM(amount), 0) FROM rentals").fetchone()[0]
-    avg_battery = conn.execute("SELECT COALESCE(AVG(battery_percentage), 0) FROM scooters").fetchone()[0]
-
-    conn.close()
+    try:
+        total_scooters = conn.execute("SELECT COUNT(*) FROM scooters").fetchone()[0]
+        available = conn.execute("SELECT COUNT(*) FROM scooters WHERE status = 'available'").fetchone()[0]
+        charging = conn.execute("SELECT COUNT(*) FROM scooters WHERE status = 'charging'").fetchone()[0]
+        total_customers = conn.execute("SELECT COUNT(*) FROM customers").fetchone()[0]
+        total_revenue = conn.execute("SELECT COALESCE(SUM(amount), 0) FROM rentals").fetchone()[0]
+        avg_battery = conn.execute("SELECT COALESCE(AVG(battery_percentage), 0) FROM scooters").fetchone()[0]
+    except Exception:
+        raise HTTPException(
+            status_code=503,
+            detail="Failed to query dashboard metrics.",
+        )
+    finally:
+        conn.close()
 
     return {
         "total_scooters": total_scooters,
