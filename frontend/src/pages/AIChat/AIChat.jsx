@@ -1,8 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { Send, Sparkles, Bot, User } from 'lucide-react'
 import './AIChat.css'
-
-const API = 'http://localhost:8000'
+import API from '../../config'
 
 export default function AIChat() {
   const [message, setMessage] = useState('')

@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Bike, Battery, Users, IndianRupee, Zap, Activity, TrendingUp } from 'lucide-react'
-
-const API = 'http://localhost:8000'
+import API from '../../config'
 
 export default function Dashboard() {
   const [stats, setStats] = useState(null)

@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Battery } from 'lucide-react'
-
-const API = 'http://localhost:8000'
+import API from '../../config'
 
 function getLevelColor(level) {
   if (level >= 60) return 'var(--success)'

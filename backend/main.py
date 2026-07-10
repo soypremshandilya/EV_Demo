@@ -1,4 +1,5 @@
 import asyncio
+import os
 from contextlib import asynccontextmanager
 
 from dotenv import load_dotenv
@@ -32,10 +33,15 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-# CORS — allow frontend dev server
+# CORS — allow frontend (localhost for dev, env var for production)
+origins = ["http://localhost:5173"]
+extra = os.getenv("CORS_ORIGINS", "")
+if extra:
+    origins.extend([o.strip() for o in extra.split(",") if o.strip()])
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],
+    allow_origins=origins,
     allow_credentials=True,
     allow_methods=["GET", "POST"],
     allow_headers=["*"],
@@ -43,6 +49,16 @@ app.add_middleware(
 
 # Ensure tables exist on startup
 init_db()
+
+# Auto-seed if tables are empty (handles fresh deployments)
+from database.db import get_connection
+_conn = get_connection()
+_count = _conn.execute("SELECT COUNT(*) FROM scooters").fetchone()[0]
+_conn.close()
+if _count == 0:
+    from database.seed_data import seed
+    seed()
+    print("Database seeded with sample data.")
 
 # READ-ONLY route registration
 app.include_router(scooters_router)

@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Users } from 'lucide-react'
-
-const API = 'http://localhost:8000'
+import API from '../../config'
 
 export default function Customers() {
   const [customers, setCustomers] = useState([])

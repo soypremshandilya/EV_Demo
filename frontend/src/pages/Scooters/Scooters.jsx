@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Bike } from 'lucide-react'
-
-const API = 'http://localhost:8000'
+import API from '../../config'
 
 function getBatteryColor(pct) {
   if (pct >= 60) return 'var(--success)'
